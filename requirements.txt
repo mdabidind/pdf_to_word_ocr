@@ -1,8 +1,4 @@
-requests
-pandas
-pdf2docx
 Flask==2.3.3
-uuid==1.30
 pdf2docx==0.5.8
 pdf2image==1.16.3
 pytesseract==0.3.10
