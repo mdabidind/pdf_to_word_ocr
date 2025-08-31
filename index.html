@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF to Word Converter | Professional Conversion</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>PDF to Word Converter</title>
     <style>
         * {
             margin: 0;
@@ -24,7 +23,7 @@
 
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 500px;
             background: white;
             border-radius: 20px;
             overflow: hidden;
@@ -34,67 +33,48 @@
         .header {
             background: linear-gradient(135deg, #4a6cf7, #6a11cb);
             color: white;
-            padding: 40px 30px;
+            padding: 30px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2.5em;
+            font-size: 2em;
             margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.95;
         }
 
         .content {
-            padding: 40px;
+            padding: 30px;
         }
 
-        .upload-section {
-            text-align: center;
-        }
-
-        .drop-zone {
-            padding: 50px 30px;
+        .upload-box {
             border: 3px dashed #4a6cf7;
             border-radius: 15px;
+            padding: 30px;
+            text-align: center;
             background: rgba(74, 108, 247, 0.05);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 25px;
-        }
-
-        .drop-zone:hover {
-            background: rgba(74, 108, 247, 0.1);
-            border-color: #6a11cb;
-        }
-
-        .drop-zone i {
-            font-size: 3.5em;
-            color: #4a6cf7;
             margin-bottom: 20px;
+            cursor: pointer;
         }
 
-        .drop-zone h3 {
+        .upload-box:hover {
+            background: rgba(74, 108, 247, 0.1);
+        }
+
+        .upload-box i {
+            font-size: 3em;
             color: #4a6cf7;
-            margin-bottom: 10px;
-            font-size: 1.5em;
+            margin-bottom: 15px;
         }
 
         .browse-btn {
             background: #4a6cf7;
             color: white;
             border: none;
-            padding: 15px 35px;
+            padding: 12px 25px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1.1em;
             font-weight: 600;
-            margin-top: 20px;
-            transition: background 0.3s ease;
+            margin-top: 15px;
         }
 
         .browse-btn:hover {
@@ -103,180 +83,68 @@
 
         .file-info {
             background: #f8f9ff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             border: 2px solid #e0e6ff;
-            margin: 25px 0;
+            margin: 15px 0;
             display: none;
         }
 
-        .file-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .file-size {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .progress-container {
+        .progress {
             width: 100%;
             background: #e0e6ff;
             border-radius: 10px;
+            height: 12px;
+            margin: 15px 0;
             overflow: hidden;
-            margin: 25px 0;
             display: none;
         }
 
         .progress-bar {
-            height: 15px;
+            height: 100%;
             background: linear-gradient(90deg, #4a6cf7, #6a11cb);
             width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 10px;
+            transition: width 0.3s;
         }
 
         .status {
             text-align: center;
             color: #4a5568;
-            font-size: 1.1em;
-            min-height: 30px;
-            margin: 15px 0;
-            font-weight: 500;
+            margin: 10px 0;
+            min-height: 20px;
         }
 
-        .conversion-stages {
-            display: flex;
-            justify-content: space-between;
-            margin: 30px 0;
+        .error {
+            color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
             display: none;
         }
 
-        .stage {
-            text-align: center;
-            flex: 1;
-            padding: 15px;
-        }
-
-        .stage-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #4a6cf7;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-size: 1.2em;
-        }
-
-        .stage.active .stage-icon {
-            background: #28a745;
-            animation: pulse 1.5s infinite;
-        }
-
-        .stage.completed .stage-icon {
-            background: #28a745;
-        }
-
-        .stage-text {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .result-section {
-            display: none;
-            text-align: center;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .success-icon {
-            font-size: 4em;
+        .success {
             color: #28a745;
-            margin-bottom: 20px;
+            background: rgba(40, 167, 69, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
         }
 
         .download-btn {
             background: #28a745;
             color: white;
-            text-decoration: none;
-            padding: 18px 40px;
+            padding: 15px 30px;
             border-radius: 10px;
-            font-weight: 600;
-            font-size: 1.2em;
+            text-decoration: none;
             display: inline-block;
-            margin: 20px 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            margin: 10px 0;
+            display: none;
         }
 
         .download-btn:hover {
             background: #218838;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
-        }
-
-        .convert-again {
-            color: #4a6cf7;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: 600;
-        }
-
-        .convert-again:hover {
-            text-decoration: underline;
-        }
-
-        .footer {
-            background: #f8f9ff;
-            padding: 25px;
-            text-align: center;
-            color: #666;
-            border-top: 1px solid #e0e6ff;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2em;
-            }
-            
-            .content {
-                padding: 30px 20px;
-            }
-            
-            .drop-zone {
-                padding: 30px 20px;
-            }
-            
-            .conversion-stages {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .stage {
-                display: flex;
-                align-items: center;
-                text-align: left;
-            }
-            
-            .stage-icon {
-                margin: 0 15px 0 0;
-            }
         }
     </style>
 </head>
@@ -284,77 +152,38 @@
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-file-pdf"></i> PDF to Word Converter</h1>
-            <p>Professional conversion with advanced OCR technology</p>
+            <p>Convert your PDF files instantly</p>
         </div>
 
         <div class="content">
-            <div class="upload-section" id="uploadSection">
-                <div class="drop-zone" id="dropZone">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <h3>Drop your PDF here</h3>
-                    <p>or click to select a file</p>
-                    <button class="browse-btn" id="browseBtn">Choose PDF File</button>
-                    <input type="file" id="fileInput" accept=".pdf" style="display: none;">
-                </div>
-
-                <div class="file-info" id="fileInfo">
-                    <div class="file-details">
-                        <div>
-                            <i class="fas fa-file-pdf" style="color: #4a6cf7; margin-right: 10px;"></i>
-                            <span id="fileName">No file selected</span>
-                        </div>
-                        <div class="file-size" id="fileSize">0 KB</div>
-                    </div>
-                </div>
-
-                <div class="conversion-stages" id="conversionStages">
-                    <div class="stage" id="stage1">
-                        <div class="stage-icon"><i class="fas fa-file-pdf"></i></div>
-                        <div class="stage-text">PDF Analysis</div>
-                    </div>
-                    <div class="stage" id="stage2">
-                        <div class="stage-icon"><i class="fas fa-eye"></i></div>
-                        <div class="stage-text">Text Recognition</div>
-                    </div>
-                    <div class="stage" id="stage3">
-                        <div class="stage-icon"><i class="fas fa-table"></i></div>
-                        <div class="stage-text">Table Extraction</div>
-                    </div>
-                    <div class="stage" id="stage4">
-                        <div class="stage-icon"><i class="fas fa-file-word"></i></div>
-                        <div class="stage-text">Word Generation</div>
-                    </div>
-                </div>
-
-                <div class="progress-container" id="progressContainer">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-
-                <div class="status" id="status">Ready to convert your PDF document</div>
+            <div class="upload-box" id="dropZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Drop your PDF here</h3>
+                <p>or click to browse files</p>
+                <button class="browse-btn" id="browseBtn">Select PDF File</button>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
             </div>
 
-            <div class="result-section" id="resultSection">
-                <div class="success-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <h2 style="color: #28a745; margin-bottom: 15px;">Conversion Complete!</h2>
-                <p style="color: #666; margin-bottom: 25px;">Your PDF has been successfully converted to Word format</p>
-                
-                <a href="#" class="download-btn" id="downloadBtn">
-                    <i class="fas fa-download"></i> Download Word Document
-                </a>
-                
-                <div class="convert-again" onclick="resetConverter()">
-                    <i class="fas fa-sync"></i> Convert Another File
-                </div>
+            <div class="file-info" id="fileInfo">
+                <i class="fas fa-file-pdf"></i>
+                <span id="fileName">No file selected</span>
             </div>
-        </div>
 
-        <div class="footer">
-            <p>© 2024 Professional PDF Converter | All rights reserved</p>
+            <div class="progress" id="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="status" id="status">Ready to convert</div>
+            <div class="error" id="error"></div>
+            <div class="success" id="success"></div>
+
+            <a href="#" class="download-btn" id="downloadBtn">
+                <i class="fas fa-download"></i> Download Word Document
+            </a>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const dropZone = document.getElementById('dropZone');
@@ -362,26 +191,14 @@
             const browseBtn = document.getElementById('browseBtn');
             const fileInfo = document.getElementById('fileInfo');
             const fileName = document.getElementById('fileName');
-            const fileSize = document.getElementById('fileSize');
-            const progressContainer = document.getElementById('progressContainer');
+            const progress = document.getElementById('progress');
             const progressBar = document.getElementById('progressBar');
             const status = document.getElementById('status');
-            const conversionStages = document.getElementById('conversionStages');
-            const uploadSection = document.getElementById('uploadSection');
-            const resultSection = document.getElementById('resultSection');
+            const error = document.getElementById('error');
+            const success = document.getElementById('success');
             const downloadBtn = document.getElementById('downloadBtn');
 
-            // Stage elements
-            const stages = [
-                document.getElementById('stage1'),
-                document.getElementById('stage2'),
-                document.getElementById('stage3'),
-                document.getElementById('stage4')
-            ];
-
-            browseBtn.addEventListener('click', () => {
-                fileInput.click();
-            });
+            browseBtn.addEventListener('click', () => fileInput.click());
 
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
@@ -392,154 +209,84 @@
             dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 dropZone.style.borderColor = '#6a11cb';
-                dropZone.style.background = 'rgba(106, 17, 203, 0.1)';
             });
 
             dropZone.addEventListener('dragleave', () => {
                 dropZone.style.borderColor = '#4a6cf7';
-                dropZone.style.background = 'rgba(74, 108, 247, 0.05)';
             });
 
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropZone.style.borderColor = '#4a6cf7';
-                dropZone.style.background = 'rgba(74, 108, 247, 0.05)';
-                
                 if (e.dataTransfer.files.length > 0) {
                     handleFile(e.dataTransfer.files[0]);
                 }
             });
 
             async function handleFile(file) {
-                // Reset UI
                 resetUI();
                 
-                // Validate file
                 if (file.type !== 'application/pdf') {
-                    showStatus('Please select a PDF file', 'error');
+                    showError('Please select a PDF file');
                     return;
                 }
 
-                if (file.size > 100 * 1024 * 1024) {
-                    showStatus('File size must be less than 100MB', 'error');
-                    return;
-                }
-
-                // Show file info
                 fileName.textContent = file.name;
-                fileSize.textContent = formatFileSize(file.size);
                 fileInfo.style.display = 'block';
-                progressContainer.style.display = 'block';
-                conversionStages.style.display = 'flex';
+                progress.style.display = 'block';
 
-                // Start conversion process
-                await convertFile(file);
-            }
+                const formData = new FormData();
+                formData.append('file', file);
 
-            async function convertFile(file) {
                 try {
-                    // Stage 1: PDF Analysis
-                    updateStage(0, 'active');
-                    showStatus('Analyzing PDF structure...', 'processing');
-                    progressBar.style.width = '15%';
-                    await delay(2000);
-                    updateStage(0, 'completed');
-                    progressBar.style.width = '30%';
-
-                    // Stage 2: Text Recognition
-                    updateStage(1, 'active');
-                    showStatus('Performing text recognition...', 'processing');
-                    await delay(2500);
-                    updateStage(1, 'completed');
-                    progressBar.style.width = '55%';
-
-                    // Stage 3: Table Extraction
-                    updateStage(2, 'active');
-                    showStatus('Extracting tables and formatting...', 'processing');
-                    await delay(2200);
-                    updateStage(2, 'completed');
-                    progressBar.style.width = '80%';
-
-                    // Stage 4: Word Generation
-                    updateStage(3, 'active');
-                    showStatus('Generating Word document...', 'processing');
-                    await delay(1800);
-                    updateStage(3, 'completed');
-                    progressBar.style.width = '100%';
-
-                    showStatus('Conversion complete!', 'success');
-                    
-                    // Final delay before showing results
-                    await delay(500);
-                    
-                    // Show result section
-                    uploadSection.style.display = 'none';
-                    resultSection.style.display = 'block';
-                    
-                    // Create download link with blank content
-                    const blob = new Blob([], { 
-                        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+                    updateProgress(20, 'Uploading file...');
+                    const response = await fetch('/convert', {
+                        method: 'POST',
+                        body: formData
                     });
-                    const url = URL.createObjectURL(blob);
-                    downloadBtn.href = url;
-                    downloadBtn.download = file.name.replace('.pdf', '.docx');
-                    
-                } catch (error) {
-                    showStatus('Conversion failed. Please try again.', 'error');
-                    console.error('Conversion error:', error);
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        updateProgress(100, 'Conversion complete!');
+                        showSuccess('File converted successfully');
+                        
+                        downloadBtn.href = result.download_url;
+                        downloadBtn.download = result.filename;
+                        downloadBtn.style.display = 'inline-block';
+                    } else {
+                        showError(result.error || 'Conversion failed');
+                    }
+                } catch (err) {
+                    showError('Server error. Please make sure the server is running.');
+                    console.error('Error:', err);
                 }
             }
 
-            function updateStage(stageIndex, status) {
-                const stage = stages[stageIndex];
-                
-                // Remove all classes
-                stage.classList.remove('active', 'completed');
-                
-                // Add the new status class
-                if (status === 'active' || status === 'completed') {
-                    stage.classList.add(status);
-                }
-            }
-
-            function showStatus(message, type) {
+            function updateProgress(percent, message) {
+                progressBar.style.width = percent + '%';
                 status.textContent = message;
-                status.style.color = type === 'error' ? '#dc3545' : 
-                                   type === 'success' ? '#28a745' : '#4a5568';
             }
 
-            function formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            function showError(message) {
+                error.textContent = message;
+                error.style.display = 'block';
+                progress.style.display = 'none';
+            }
+
+            function showSuccess(message) {
+                success.textContent = message;
+                success.style.display = 'block';
             }
 
             function resetUI() {
                 fileInfo.style.display = 'none';
-                progressContainer.style.display = 'none';
-                conversionStages.style.display = 'none';
+                progress.style.display = 'none';
+                error.style.display = 'none';
+                success.style.display = 'none';
+                downloadBtn.style.display = 'none';
                 progressBar.style.width = '0%';
-                
-                // Reset all stages
-                stages.forEach((stage, index) => {
-                    stage.classList.remove('active', 'completed');
-                });
-                
-                showStatus('Preparing conversion system...', 'processing');
-            }
-
-            function resetConverter() {
-                uploadSection.style.display = 'block';
-                resultSection.style.display = 'none';
-                fileInput.value = '';
-                resetUI();
-                showStatus('Ready to convert your PDF document', 'ready');
-            }
-
-            function delay(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
+                status.textContent = 'Processing...';
             }
         });
     </script>
