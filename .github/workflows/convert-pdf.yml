@@ -1,0 +1,50 @@
+name: Convert PDF to Word
+
+on:
+  push:
+    paths:
+      - 'inputs/**/*.pdf'  # Trigger when PDFs are added to inputs folder
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y poppler-utils tesseract-ocr openjdk-17-jre
+        
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+        
+    - name: Convert PDF files
+      run: |
+        # Create outputs directory if it doesn't exist
+        mkdir -p outputs
+        
+        # Find all PDFs in inputs folder and convert them
+        for pdf_file in inputs/*.pdf; do
+          if [ -f "$pdf_file" ]; then
+            filename=$(basename "$pdf_file" .pdf)
+            echo "Converting $pdf_file to outputs/${filename}.docx"
+            python scripts/convert_all_in_one.py "$pdf_file" "outputs/${filename}.docx"
+          fi
+        done
+        
+    - name: Commit converted files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add outputs/
+        git commit -m "Add converted DOCX files" || echo "No changes to commit"
+        git push
