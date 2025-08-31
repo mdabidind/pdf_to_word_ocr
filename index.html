@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF to Word Converter</title>
+    <title>PDF to Word Converter </title>
     <style>
         * {
             margin: 0;
@@ -23,7 +23,7 @@
 
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             background: white;
             border-radius: 20px;
             overflow: hidden;
@@ -33,118 +33,133 @@
         .header {
             background: linear-gradient(135deg, #4a6cf7, #6a11cb);
             color: white;
-            padding: 30px;
+            padding: 40px 30px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2em;
+            font-size: 2.2em;
             margin-bottom: 10px;
         }
 
         .content {
-            padding: 30px;
+            padding: 40px;
+        }
+
+        .upload-section {
+            text-align: center;
         }
 
         .upload-box {
             border: 3px dashed #4a6cf7;
             border-radius: 15px;
-            padding: 30px;
-            text-align: center;
+            padding: 40px 30px;
             background: rgba(74, 108, 247, 0.05);
-            margin-bottom: 20px;
-            cursor: pointer;
-        }
-
-        .upload-box:hover {
-            background: rgba(74, 108, 247, 0.1);
+            margin-bottom: 25px;
         }
 
         .upload-box i {
             font-size: 3em;
             color: #4a6cf7;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        .browse-btn {
+        .url-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e6ff;
+            border-radius: 10px;
+            font-size: 1em;
+            margin: 20px 0;
+            transition: border-color 0.3s;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #4a6cf7;
+        }
+
+        .convert-btn {
             background: #4a6cf7;
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
             font-weight: 600;
-            margin-top: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
         }
 
-        .browse-btn:hover {
+        .convert-btn:hover {
             background: #6a11cb;
         }
 
-        .file-info {
+        .instructions {
             background: #f8f9ff;
-            padding: 15px;
-            border-radius: 10px;
-            border: 2px solid #e0e6ff;
-            margin: 15px 0;
-            display: none;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
         }
 
-        .progress {
-            width: 100%;
-            background: #e0e6ff;
-            border-radius: 10px;
-            height: 12px;
-            margin: 15px 0;
-            overflow: hidden;
-            display: none;
+        .instructions h3 {
+            color: #4a6cf7;
+            margin-bottom: 15px;
         }
 
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #4a6cf7, #6a11cb);
-            width: 0%;
-            transition: width 0.3s;
+        .steps {
+            list-style: none;
+        }
+
+        .steps li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e6ff;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .steps li:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            background: #4a6cf7;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
         }
 
         .status {
             text-align: center;
             color: #4a5568;
-            margin: 10px 0;
-            min-height: 20px;
+            margin: 20px 0;
+            min-height: 30px;
         }
 
-        .error {
-            color: #dc3545;
-            background: rgba(220, 53, 69, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            display: none;
-        }
-
-        .success {
-            color: #28a745;
-            background: rgba(40, 167, 69, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            display: none;
-        }
-
-        .download-btn {
-            background: #28a745;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
+        .github-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: #4a6cf7;
             text-decoration: none;
-            display: inline-block;
-            margin: 10px 0;
-            display: none;
         }
 
-        .download-btn:hover {
-            background: #218838;
+        .github-link:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background: #f8f9ff;
+            padding: 25px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e0e6ff;
         }
     </style>
 </head>
@@ -152,141 +167,101 @@
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-file-pdf"></i> PDF to Word Converter</h1>
-            <p>Convert your PDF files instantly</p>
+            <p>Powered https://pdftoolslover.com Actions</p>
         </div>
 
         <div class="content">
-            <div class="upload-box" id="dropZone">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <h3>Drop your PDF here</h3>
-                <p>or click to browse files</p>
-                <button class="browse-btn" id="browseBtn">Select PDF File</button>
-                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            <div class="upload-section">
+                <div class="upload-box">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Convert PDF to Word</h3>
+                    <p>Enter the URL of your PDF file</p>
+                    
+                    <input type="url" class="url-input" id="pdfUrl" 
+                           placeholder="https://example.com/document.pdf" required>
+                    
+                    <button class="convert-btn" onclick="startConversion()">
+                        <i class="fas fa-cog"></i> Start Conversion
+                    </button>
+                </div>
+
+                <div class="status" id="status">
+                    Enter a PDF URL above to start conversion
+                </div>
+
+                <div class="instructions">
+                    <h3><i class="fas fa-info-circle"></i> How it works:</h3>
+                    <ul class="steps">
+                        <li>
+                            <span class="step-number">1</span>
+                            <span>Enter the URL of your PDF file</span>
+                        </li>
+                        <li>
+                            <span class="step-number">2</span>
+                            <span>Click "Start Conversion"</span>
+                        </li>
+                        <li>
+                            <span class="step-number">3</span>
+                            <span> Actions will process your file</span>
+                        </li>
+                        <li>
+                            <span class="step-number">4</span>
+                            <span>Download the Word document from Artifacts</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <a href="https://github.com/your-username/your-repo/actions" 
+                   class="github-link" target="_blank">
+                    <i class="fab fa-github"></i> View Conversion Status
+                </a>
             </div>
+        </div>
 
-            <div class="file-info" id="fileInfo">
-                <i class="fas fa-file-pdf"></i>
-                <span id="fileName">No file selected</span>
-            </div>
-
-            <div class="progress" id="progress">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-
-            <div class="status" id="status">Ready to convert</div>
-            <div class="error" id="error"></div>
-            <div class="success" id="success"></div>
-
-            <a href="#" class="download-btn" id="downloadBtn">
-                <i class="fas fa-download"></i> Download Word Document
-            </a>
+        <div class="footer">
+            <p>© 2024 PDF to Word Converter </p>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('fileInput');
-            const browseBtn = document.getElementById('browseBtn');
-            const fileInfo = document.getElementById('fileInfo');
-            const fileName = document.getElementById('fileName');
-            const progress = document.getElementById('progress');
-            const progressBar = document.getElementById('progressBar');
+        function startConversion() {
+            const pdfUrl = document.getElementById('pdfUrl').value.trim();
             const status = document.getElementById('status');
-            const error = document.getElementById('error');
-            const success = document.getElementById('success');
-            const downloadBtn = document.getElementById('downloadBtn');
-
-            browseBtn.addEventListener('click', () => fileInput.click());
-
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handleFile(e.target.files[0]);
-                }
-            });
-
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.style.borderColor = '#6a11cb';
-            });
-
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.style.borderColor = '#4a6cf7';
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.style.borderColor = '#4a6cf7';
-                if (e.dataTransfer.files.length > 0) {
-                    handleFile(e.dataTransfer.files[0]);
-                }
-            });
-
-            async function handleFile(file) {
-                resetUI();
-                
-                if (file.type !== 'application/pdf') {
-                    showError('Please select a PDF file');
-                    return;
-                }
-
-                fileName.textContent = file.name;
-                fileInfo.style.display = 'block';
-                progress.style.display = 'block';
-
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    updateProgress(20, 'Uploading file...');
-                    const response = await fetch('/convert', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        updateProgress(100, 'Conversion complete!');
-                        showSuccess('File converted successfully');
-                        
-                        downloadBtn.href = result.download_url;
-                        downloadBtn.download = result.filename;
-                        downloadBtn.style.display = 'inline-block';
-                    } else {
-                        showError(result.error || 'Conversion failed');
-                    }
-                } catch (err) {
-                    showError('Server error. Please make sure the server is running.');
-                    console.error('Error:', err);
-                }
+            
+            if (!pdfUrl) {
+                status.innerHTML = '<span style="color: #dc3545;">Please enter a PDF URL</span>';
+                return;
             }
 
-            function updateProgress(percent, message) {
-                progressBar.style.width = percent + '%';
-                status.textContent = message;
+            if (!pdfUrl.toLowerCase().endsWith('.pdf')) {
+                status.innerHTML = '<span style="color: #dc3545;">Please enter a valid PDF URL</span>';
+                return;
             }
 
-            function showError(message) {
-                error.textContent = message;
-                error.style.display = 'block';
-                progress.style.display = 'none';
-            }
+            status.innerHTML = '<span style="color: #4a6cf7;">Starting conversion on GitHub...</span>';
+            
+            // Redirect to GitHub Actions with the PDF URL
+            const repoUrl = `https://github.com/your-username/your-repo/actions/workflows/convert-pdf.yml?pdf_url=${encodeURIComponent(pdfUrl)}`;
+            
+            setTimeout(() => {
+                window.open(repoUrl, '_blank');
+                status.innerHTML = `
+                    <span style="color: #28a745;">
+                        Conversion started! Check GitHub Actions for progress.
+                    </span>
+                    <br>
+                    <a href="${repoUrl}" target="_blank" style="color: #4a6cf7;">
+                        Click here if not redirected automatically
+                    </a>
+                `;
+            }, 1000);
+        }
 
-            function showSuccess(message) {
-                success.textContent = message;
-                success.style.display = 'block';
-            }
-
-            function resetUI() {
-                fileInfo.style.display = 'none';
-                progress.style.display = 'none';
-                error.style.display = 'none';
-                success.style.display = 'none';
-                downloadBtn.style.display = 'none';
-                progressBar.style.width = '0%';
-                status.textContent = 'Processing...';
+        // Allow Enter key to trigger conversion
+        document.getElementById('pdfUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startConversion();
             }
         });
     </script>
