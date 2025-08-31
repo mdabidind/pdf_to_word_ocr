@@ -1,0 +1,45 @@
+name: Test PDF to DOCX Conversion
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-conversion:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test conversion
+      run: |
+        python -c "
+        import convert_all_in_one
+        # Create a simple PDF for testing
+        from reportlab.pdfgen import canvas
+        from io import BytesIO
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer)
+        c.drawString(100, 750, 'Test PDF Content')
+        c.save()
+        buffer.seek(0)
+        
+        # Test conversion
+        with open('test.pdf', 'wb') as f:
+            f.write(buffer.read())
+            
+        result = convert_all_in_one.convert_pdf_to_docx('test.pdf', 'test.docx')
+        print(f'Conversion result: {result}')
+        "
