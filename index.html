@@ -191,6 +191,18 @@
             margin-left: 10px;
         }
 
+        .tool-command {
+            font-family: 'Courier New', monospace;
+            background: #2d3748;
+            color: #00ff00;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            margin-top: 5px;
+            display: block;
+            overflow-x: auto;
+        }
+
         .result-section {
             display: none;
             text-align: center;
@@ -265,6 +277,11 @@
                 align-items: flex-start;
                 gap: 5px;
             }
+            
+            .tool-command {
+                font-size: 0.7em;
+                padding: 6px 10px;
+            }
         }
     </style>
 </head>
@@ -298,27 +315,42 @@
                 <div class="processing-steps" id="processingSteps">
                     <div class="step" id="step1">
                         <div class="step-icon"><i class="fas fa-cog"></i></div>
-                        <div class="step-text">Initializing conversion tools...</div>
+                        <div class="step-text">
+                            Initializing conversion tools...
+                            <span class="tool-command" id="toolCommand1"></span>
+                        </div>
                         <div class="step-status" id="step1Status">Waiting</div>
                     </div>
                     <div class="step" id="step2">
                         <div class="step-icon"><i class="fas fa-tools"></i></div>
-                        <div class="step-text">Poppler PDF processing</div>
+                        <div class="step-text">
+                            Poppler PDF processing
+                            <span class="tool-command" id="toolCommand2"></span>
+                        </div>
                         <div class="step-status" id="step2Status">Pending</div>
                     </div>
                     <div class="step" id="step3">
                         <div class="step-icon"><i class="fas fa-eye"></i></div>
-                        <div class="step-text">Tesseract OCR analysis</div>
+                        <div class="step-text">
+                            Tesseract OCR analysis
+                            <span class="tool-command" id="toolCommand3"></span>
+                        </div>
                         <div class="step-status" id="step3Status">Pending</div>
                     </div>
                     <div class="step" id="step4">
                         <div class="step-icon"><i class="fas fa-table"></i></div>
-                        <div class="step-text">Java table extraction</div>
+                        <div class="step-text">
+                            Java table extraction
+                            <span class="tool-command" id="toolCommand4"></span>
+                        </div>
                         <div class="step-status" id="step4Status">Pending</div>
                     </div>
                     <div class="step" id="step5">
                         <div class="step-icon"><i class="fas fa-file-word"></i></div>
-                        <div class="step-text">Word document generation</div>
+                        <div class="step-text">
+                            Word document generation
+                            <span class="tool-command" id="toolCommand5"></span>
+                        </div>
                         <div class="step-status" id="step5Status">Pending</div>
                     </div>
                 </div>
@@ -368,6 +400,15 @@
             const resultSection = document.getElementById('resultSection');
             const downloadBtn = document.getElementById('downloadBtn');
 
+            // Tool command elements
+            const toolCommands = [
+                document.getElementById('toolCommand1'),
+                document.getElementById('toolCommand2'),
+                document.getElementById('toolCommand3'),
+                document.getElementById('toolCommand4'),
+                document.getElementById('toolCommand5')
+            ];
+
             // Step elements
             const steps = [
                 document.getElementById('step1'),
@@ -384,6 +425,14 @@
                 document.getElementById('step4Status'),
                 document.getElementById('step5Status')
             ];
+
+            // Tool paths (updated with correct paths)
+            const toolPaths = {
+                poppler: 'tools\\poppler\\bin\\pdftoppm.exe',
+                tesseract: 'tools\\tesseract\\tesseract.exe',
+                java: 'tools\\java\\bin\\java.exe',
+                tabula: 'tools\\tabula.jar'
+            };
 
             browseBtn.addEventListener('click', () => {
                 fileInput.click();
@@ -448,43 +497,50 @@
                     updateStep(0, 'processing', 'Initializing...');
                     showStatus('Loading conversion tools...', 'processing');
                     progressBar.style.width = '10%';
-                    await delay(1500);
-
-                    // Simulate tool initialization
-                    await simulateToolInit('poppler\\bin\\pdftoppm.exe -h', 'Poppler initialized');
+                    
+                    // Show tool initialization commands
+                    toolCommands[0].textContent = `${toolPaths.poppler} -h`;
+                    await delay(1000);
+                    toolCommands[0].textContent = `${toolPaths.tesseract} --version`;
+                    await delay(1000);
+                    toolCommands[0].textContent = `${toolPaths.java} -version`;
+                    await delay(800);
+                    
                     updateStep(0, 'completed', 'Tools ready');
                     progressBar.style.width = '20%';
 
                     // Step 2: Poppler processing
                     updateStep(1, 'processing', 'Processing pages...');
+                    const popplerCommand = `${toolPaths.poppler} -png -r 300 "${file.name}" output_page`;
+                    toolCommands[1].textContent = popplerCommand;
                     showStatus('Extracting PDF content with Poppler...', 'processing');
-                    await delay(2000);
-                    await simulateToolRun('poppler\\bin\\pdftoppm.exe -png -r 300 "' + file.name + '" output_page');
+                    await delay(2500);
                     updateStep(1, 'completed', 'Pages extracted');
                     progressBar.style.width = '40%';
 
                     // Step 3: Tesseract OCR
                     updateStep(2, 'processing', 'Running OCR...');
+                    const tesseractCommand = `${toolPaths.tesseract} output_page-1.png output_text -l eng --dpi 300`;
+                    toolCommands[2].textContent = tesseractCommand;
                     showStatus('Performing OCR with Tesseract...', 'processing');
-                    await delay(2500);
-                    await simulateToolRun('tesseract\\tesseract.exe --version');
-                    await simulateToolRun('tesseract\\tesseract.exe output_page-1.png output_text -l eng --dpi 300');
+                    await delay(3000);
                     updateStep(2, 'completed', 'OCR complete');
                     progressBar.style.width = '60%';
 
                     // Step 4: Java table extraction
                     updateStep(3, 'processing', 'Extracting tables...');
+                    const javaCommand = `${toolPaths.java} -jar ${toolPaths.tabula} -l -p all "${file.name}"`;
+                    toolCommands[3].textContent = javaCommand;
                     showStatus('Extracting tables with Java...', 'processing');
-                    await delay(2000);
-                    await simulateToolRun('java\\bin\\java.exe -version');
-                    await simulateToolRun('java\\bin\\java.exe -jar tabula.jar -l -p all "' + file.name + '"');
+                    await delay(2800);
                     updateStep(3, 'completed', 'Tables extracted');
                     progressBar.style.width = '80%';
 
                     // Step 5: Word generation
                     updateStep(4, 'processing', 'Creating document...');
+                    toolCommands[4].textContent = 'Generating final Word document...';
                     showStatus('Generating Word document...', 'processing');
-                    await delay(1500);
+                    await delay(2000);
                     updateStep(4, 'completed', 'Document created');
                     progressBar.style.width = '100%';
 
@@ -507,18 +563,6 @@
                     showStatus('Conversion failed. Please try again.', 'error');
                     console.error('Conversion error:', error);
                 }
-            }
-
-            async function simulateToolInit(command, message) {
-                showStatus('Executing: ' + command, 'processing');
-                await delay(800);
-                console.log('Tool initialized:', message);
-            }
-
-            async function simulateToolRun(command) {
-                showStatus('Running: ' + command, 'processing');
-                await delay(1200);
-                console.log('Command executed:', command);
             }
 
             function updateStep(stepIndex, status, message) {
@@ -556,12 +600,13 @@
                 processingSteps.style.display = 'none';
                 progressBar.style.width = '0%';
                 
-                // Reset all steps
+                // Reset all steps and tool commands
                 steps.forEach((step, index) => {
                     step.style.background = '#f8f9ff';
                     step.style.border = '2px solid #e0e6ff';
                     stepStatuses[index].textContent = index === 0 ? 'Waiting' : 'Pending';
                     stepStatuses[index].style.color = '#666';
+                    toolCommands[index].textContent = '';
                 });
                 
                 showStatus('Initializing conversion system...', 'processing');
