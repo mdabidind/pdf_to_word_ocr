@@ -1,0 +1,31 @@
+name: Run Python Script # Name of your workflow
+
+on:
+  push: # Trigger when you push to the 'main' branch
+    branches: [ main ]
+  schedule:
+    - cron: '0 8 * * *'  # Also run every day at 8:00 AM (UTC)
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest # The OS of the virtual machine to run on
+
+    steps:
+    # Step 1: Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Step 2: Set up Python
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # Specify your Python version
+
+    # Step 3: Install dependencies (if you have a requirements.txt)
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    # Step 4: Run the script!
+    - name: Run the Python script
+      run: python your_script.py
