@@ -1,218 +1,247 @@
-# app.py
 import os
-import uuid
-import time
-import threading
+import sys
+import tempfile
+import subprocess
 import shutil
-from flask import Flask, request, jsonify, send_from_directory, abort
+from pathlib import Path
+from docx import Document
+from docx.shared import Inches
+import pdf2image
+import pytesseract
+from pdf2docx import Converter
+import pdfplumber
+import fitz  # PyMuPDF
 
-# --- Config (adjust if you want absolute paths) ---
-ROOT = os.path.abspath(os.getcwd())               # project root (where app.py lives)
-UPLOADS = os.path.join(ROOT, "uploads")
-OUTPUTS = os.path.join(ROOT, "output")
-TOOLS   = os.path.join(ROOT, "tools")
-
-os.makedirs(UPLOADS, exist_ok=True)
-os.makedirs(OUTPUTS, exist_ok=True)
-os.makedirs(TOOLS, exist_ok=True)
-
-# Tool default paths (will be used by convert function)
-TESSERACT = os.environ.get("TESSERACT_PATH") or os.path.join(TOOLS, "tesseract", "tesseract.exe")
-POPPLER_BIN = os.environ.get("POPPLER_PATH") or os.path.join(TOOLS, "poppler", "bin")
-JAVA_EXE = os.environ.get("JAVA_PATH") or os.path.join(TOOLS, "java", "bin", "java.exe")
-TABULA_JAR = os.environ.get("TABULA_JAR") or os.path.join(TOOLS, "tabula", "tabula.jar")
-
-# Try to import the user's convert_all_in_one.convert_pdf_to_docx function if present
-convert_func = None
-try:
-    import convert_all_in_one as converter_module
-    if hasattr(converter_module, "convert_pdf_to_docx"):
-        convert_func = converter_module.convert_pdf_to_docx
-except Exception:
-    convert_func = None
-
-# If convert_all_in_one not present, we'll implement a minimal fallback using pdf2docx + OCR
-def fallback_convert(pdf_path, out_docx):
-    """
-    Simple fallback conversion:
-     - tries pdf2docx for digital PDFs
-     - otherwise rasterizes pages via poppler (if available) and runs tesseract OCR
-    This is intentionally conservative and intended as a working fallback.
-    """
-    from pdf2docx import Converter as PDF2DOCX
-    from pdf2image import convert_from_path
-    from docx import Document
-    import pytesseract
-    # set tesseract path if available
-    if os.path.exists(TESSERACT):
+class PDFToWordConverter:
+    def __init__(self):
+        # Set up tool paths
+        self.tools_dir = Path("tools")
+        self.setup_tool_paths()
+        
+    def setup_tool_paths(self):
+        """Configure all tool paths"""
+        # Poppler paths
+        self.poppler_path = self.tools_dir / "poppler" / "bin"
+        if self.poppler_path.exists():
+            os.environ['PATH'] += os.pathsep + str(self.poppler_path)
+        
+        # Tesseract path
+        self.tesseract_path = self.tools_dir / "tesseract" / "tesseract.exe"
+        if self.tesseract_path.exists():
+            pytesseract.pytesseract.tesseract_cmd = str(self.tesseract_path)
+        
+        # Java path for tabula
+        self.java_path = self.tools_dir / "java" / "bin" / "java.exe"
+        self.tabula_jar = self.tools_dir / "tabula.jar"
+        
+    def is_digital_pdf(self, pdf_path):
+        """Check if PDF has selectable text"""
         try:
-            import pytesseract as _pt
-            _pt.pytesseract.tesseract_cmd = TESSERACT
-        except Exception:
-            pass
-
-    # quick embedded text detection (first 3 pages)
-    has_text = False
-    try:
-        import pdfplumber
-        with pdfplumber.open(pdf_path) as pdf:
-            sample = "".join((pdf.pages[i].extract_text() or "") for i in range(min(3, len(pdf.pages))))
-            has_text = len(sample.strip()) > 50
-    except Exception:
-        has_text = False
-
-    # If PDF has selectable text, try pdf2docx
-    if has_text:
+            with pdfplumber.open(pdf_path) as pdf:
+                # Check first 3 pages for text
+                for i in range(min(3, len(pdf.pages))):
+                    text = pdf.pages[i].extract_text()
+                    if text and len(text.strip()) > 100:
+                        return True
+            return False
+        except:
+            return False
+    
+    def extract_text_with_ocr(self, pdf_path, output_docx):
+        """High-quality OCR extraction with Tesseract"""
         try:
-            cv = PDF2DOCX(pdf_path)
-            cv.convert(out_docx, start=0, end=None)
+            # Convert PDF to high-resolution images
+            images = pdf2image.convert_from_path(
+                pdf_path,
+                dpi=400,  # High DPI for quality
+                poppler_path=str(self.poppler_path) if self.poppler_path.exists() else None,
+                grayscale=True  # Better for OCR
+            )
+            
+            doc = Document()
+            
+            for i, image in enumerate(images):
+                # Save temporary image
+                with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_img:
+                    image.save(temp_img.name, 'PNG', dpi=(400, 400))
+                    
+                    # Perform OCR with optimized settings
+                    text = pytesseract.image_to_string(
+                        temp_img.name,
+                        lang='eng',
+                        config='--psm 6 -c preserve_interword_spaces=1'
+                    )
+                
+                # Add text to document
+                if text.strip():
+                    paragraph = doc.add_paragraph(text)
+                    paragraph.style = 'Normal'
+                
+                # Add page break except for last page
+                if i < len(images) - 1:
+                    doc.add_page_break()
+                
+                # Clean up temp file
+                os.unlink(temp_img.name)
+            
+            doc.save(output_docx)
+            return True
+            
+        except Exception as e:
+            print(f"OCR extraction failed: {e}")
+            return False
+    
+    def extract_tables(self, pdf_path, output_docx):
+        """Extract tables using multiple methods"""
+        try:
+            doc = Document(output_docx)
+            tables_found = False
+            
+            # Method 1: Try tabula with Java
+            if self.java_path.exists() and self.tabula_jar.exists():
+                try:
+                    with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as temp_csv:
+                        cmd = [
+                            str(self.java_path),
+                            '-jar', str(self.tabula_jar),
+                            '-f', 'CSV',
+                            '-o', temp_csv.name,
+                            '-p', 'all',
+                            '-l',  # Lattice mode for tables
+                            str(pdf_path)
+                        ]
+                        
+                        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                        
+                        if result.returncode == 0:
+                            with open(temp_csv.name, 'r', encoding='utf-8') as f:
+                                csv_content = f.read()
+                                if csv_content.strip():
+                                    tables_found = True
+                                    doc.add_paragraph("Extracted Tables:").bold = True
+                                    doc.add_paragraph(csv_content)
+                    
+                    os.unlink(temp_csv.name)
+                except:
+                    pass
+            
+            # Method 2: Try pdfplumber as fallback
+            if not tables_found:
+                try:
+                    with pdfplumber.open(pdf_path) as pdf:
+                        for page_num, page in enumerate(pdf.pages):
+                            tables = page.extract_tables()
+                            if tables:
+                                tables_found = True
+                                doc.add_paragraph(f"Tables from page {page_num + 1}:").bold = True
+                                
+                                for table in tables:
+                                    for row in table:
+                                        if any(cell is not None for cell in row):
+                                            doc.add_paragraph(" | ".join(str(cell) if cell else "" for cell in row))
+                except:
+                    pass
+            
+            if tables_found:
+                doc.save(output_docx)
+            
+            return tables_found
+            
+        except Exception as e:
+            print(f"Table extraction failed: {e}")
+            return False
+    
+    def convert_digital_pdf(self, pdf_path, output_docx):
+        """Convert digital PDF with layout preservation"""
+        try:
+            cv = Converter(pdf_path)
+            cv.convert(output_docx, start=0, end=None)
             cv.close()
             return True
-        except Exception:
-            pass
-
-    # fallback OCR per-page (high-DPI)
-    imgs = convert_from_path(pdf_path, dpi=300, poppler_path=POPPLER_BIN if os.path.exists(POPPLER_BIN) else None)
-    doc = Document()
-    for i, img in enumerate(imgs):
-        txt = pytesseract.image_to_string(img)
-        for line in txt.splitlines():
-            if line.strip():
-                doc.add_paragraph(line)
-        if i != len(imgs) - 1:
-            doc.add_page_break()
-
-    doc.save(out_docx)
-    return True
-
-# use selected conversion function (user-provided or fallback)
-def run_conversion(pdf_path, out_docx, progress_callback=None):
-    # prefer user convert_func if available
-    if convert_func:
-        # try calling user implementation; many user scripts accept (pdf_path, out_docx)
-        try:
-            # If convert_func uses tools relative to project root, ensure current env knows them
-            os.environ["TESSERACT_PATH"] = TESSERACT
-            os.environ["POPPLER_PATH"] = POPPLER_BIN
-            os.environ["JAVA_PATH"] = JAVA_EXE
-            os.environ["TABULA_JAR"] = TABULA_JAR
-            return bool(convert_func(pdf_path, out_docx))
         except Exception as e:
-            # fallback on error
-            print("convert_all_in_one failed:", e)
-            return fallback_convert(pdf_path, out_docx)
+            print(f"Digital conversion failed: {e}")
+            return False
+    
+    def enhance_quality(self, output_docx):
+        """Enhance document quality for Xerox-like output"""
+        try:
+            doc = Document(output_docx)
+            
+            # Set better document properties
+            core_props = doc.core_properties
+            core_props.title = "Converted Document"
+            core_props.subject = "PDF to Word Conversion"
+            
+            # Set better page margins
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+            
+            doc.save(output_docx)
+            return True
+            
+        except Exception as e:
+            print(f"Quality enhancement failed: {e}")
+            return False
+    
+    def convert_pdf_to_word(self, pdf_path, output_docx):
+        """Main conversion method with fallback strategies"""
+        print(f"Starting conversion: {pdf_path}")
+        
+        # Try digital conversion first
+        if self.is_digital_pdf(pdf_path):
+            print("Detected digital PDF - using layout preservation...")
+            if self.convert_digital_pdf(pdf_path, output_docx):
+                print("Digital conversion successful!")
+                # Still try to extract tables
+                self.extract_tables(pdf_path, output_docx)
+                self.enhance_quality(output_docx)
+                return True
+        
+        # Fallback to high-quality OCR
+        print("Using high-quality OCR conversion...")
+        if self.extract_text_with_ocr(pdf_path, output_docx):
+            print("OCR conversion successful!")
+            # Extract tables from OCR result
+            self.extract_tables(pdf_path, output_docx)
+            self.enhance_quality(output_docx)
+            return True
+        
+        print("All conversion methods failed")
+        return False
+
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: python app.py <input_pdf> <output_docx>")
+        sys.exit(1)
+    
+    input_pdf = sys.argv[1]
+    output_docx = sys.argv[2]
+    
+    # Validate input file
+    if not os.path.exists(input_pdf):
+        print(f"Error: Input file '{input_pdf}' not found")
+        sys.exit(1)
+    
+    if not input_pdf.lower().endswith('.pdf'):
+        print("Error: Input file must be a PDF")
+        sys.exit(1)
+    
+    # Initialize converter
+    converter = PDFToWordConverter()
+    
+    # Perform conversion
+    success = converter.convert_pdf_to_word(input_pdf, output_docx)
+    
+    if success:
+        print(f"Conversion successful! Output: {output_docx}")
+        sys.exit(0)
     else:
-        return fallback_convert(pdf_path, out_docx)
-
-
-# In-memory job store (for simplicity)
-jobs = {}  # job_id -> {status, progress, in, out, error}
-
-app = Flask(__name__, static_folder='.', static_url_path='')
-
-@app.route("/")
-def index():
-    return app.send_static_file("index.html")
-
-# helper
-def allowed_pdf(fname):
-    return fname.lower().endswith(".pdf")
-
-@app.route("/upload", methods=["POST"])
-def upload():
-    if "file" not in request.files:
-        return "no file", 400
-    f = request.files["file"]
-    if f.filename == "":
-        return "empty filename", 400
-    if not allowed_pdf(f.filename):
-        return "only pdf allowed", 400
-
-    job_id = str(uuid.uuid4())
-    in_name = job_id + ".pdf"
-    in_path = os.path.join(UPLOADS, in_name)
-    f.save(in_path)
-
-    out_name = job_id + ".docx"
-    out_path = os.path.join(OUTPUTS, out_name)
-
-    jobs[job_id] = {"status": "queued", "progress": 0, "in": in_name, "out": None, "error": None}
-
-    # start background thread
-    thread = threading.Thread(target=_worker, args=(job_id, in_path, out_path), daemon=True)
-    thread.start()
-
-    return jsonify({"id": job_id})
-
-def _worker(job_id, in_path, out_path):
-    try:
-        jobs[job_id]["status"] = "processing"
-        jobs[job_id]["progress"] = 5
-
-        # run conversion (report rough progress)
-        jobs[job_id]["progress"] = 10
-        success = run_conversion(in_path, out_path, progress_callback=None)
-
-        # ensure file was created and is reasonable size
-        if not success or not os.path.exists(out_path) or os.path.getsize(out_path) < 1024:
-            # Try a final fallback: if pdf2docx can at least export something
-            try:
-                # attempt one more time with fallback converter
-                ok = fallback_convert(in_path, out_path)
-            except Exception as e:
-                ok = False
-                print("fallback final attempt failed:", e)
-
-            if (not ok) or (not os.path.exists(out_path)) or os.path.getsize(out_path) < 1024:
-                jobs[job_id]["status"] = "error"
-                jobs[job_id]["error"] = "Conversion failed or output corrupted (file missing or too small)."
-                jobs[job_id]["progress"] = 0
-                return
-
-        # success
-        jobs[job_id]["out"] = os.path.basename(out_path)
-        jobs[job_id]["progress"] = 100
-        jobs[job_id]["status"] = "done"
-    except Exception as e:
-        jobs[job_id]["status"] = "error"
-        jobs[job_id]["error"] = str(e)
-        jobs[job_id]["progress"] = 0
-
-@app.route("/status")
-def status():
-    job_id = request.args.get("id")
-    if not job_id or job_id not in jobs:
-        return jsonify({"status": "error", "message": "invalid id"}), 404
-    j = jobs[job_id]
-    return jsonify({
-        "status": j.get("status"),
-        "progress": j.get("progress", 0),
-        "out": j.get("out"),
-        "message": j.get("error")
-    })
-
-@app.route("/download")
-def download():
-    fname = request.args.get("file")
-    if not fname:
-        return "missing file", 400
-    safe = os.path.basename(fname)
-    path = os.path.join(OUTPUTS, safe)
-    if not os.path.exists(path):
-        return "file not found", 404
-    # final validation: docx must be > 1 KB
-    if os.path.getsize(path) < 1024:
-        return "file corrupted or too small", 500
-    return send_from_directory(OUTPUTS, safe, as_attachment=True)
+        print("Conversion failed")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    # helpful startup messages
-    print("Project root:", ROOT)
-    print("Uploads folder:", UPLOADS)
-    print("Outputs folder:", OUTPUTS)
-    print("Tools lookup:", TOOLS)
-    print("Tesseract path:", TESSERACT)
-    print("Poppler bin:", POPPLER_BIN)
-    print("Java exe:", JAVA_EXE)
-    print("Tabula jar:", TABULA_JAR)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    main()
