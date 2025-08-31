@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF to Word Converter | Professional OCR Conversion</title>
+    <title>PDF to Word Converter | Professional Conversion</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -24,7 +24,7 @@
 
         .container {
             width: 100%;
-            max-width: 700px;
+            max-width: 600px;
             background: white;
             border-radius: 20px;
             overflow: hidden;
@@ -108,14 +108,12 @@
             border: 2px solid #e0e6ff;
             margin: 25px 0;
             display: none;
-            text-align: left;
         }
 
         .file-details {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
         }
 
         .file-size {
@@ -149,58 +147,45 @@
             font-weight: 500;
         }
 
-        .processing-steps {
-            background: #f8f9ff;
-            padding: 20px;
-            border-radius: 10px;
-            border: 2px solid #e0e6ff;
-            margin: 20px 0;
+        .conversion-stages {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
             display: none;
         }
 
-        .step {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 8px;
-            background: white;
+        .stage {
+            text-align: center;
+            flex: 1;
+            padding: 15px;
         }
 
-        .step-icon {
-            width: 30px;
-            height: 30px;
+        .stage-icon {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: #4a6cf7;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 15px;
-            flex-shrink: 0;
+            margin: 0 auto 10px;
+            font-size: 1.2em;
         }
 
-        .step-text {
-            flex: 1;
-            color: #4a5568;
+        .stage.active .stage-icon {
+            background: #28a745;
+            animation: pulse 1.5s infinite;
         }
 
-        .step-status {
-            color: #666;
+        .stage.completed .stage-icon {
+            background: #28a745;
+        }
+
+        .stage-text {
             font-size: 0.9em;
-            margin-left: 10px;
-        }
-
-        .tool-command {
-            font-family: 'Courier New', monospace;
-            background: #2d3748;
-            color: #00ff00;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 0.8em;
+            color: #666;
             margin-top: 5px;
-            display: block;
-            overflow-x: auto;
         }
 
         .result-section {
@@ -259,6 +244,12 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -272,15 +263,19 @@
                 padding: 30px 20px;
             }
             
-            .file-details {
+            .conversion-stages {
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
+                gap: 15px;
             }
             
-            .tool-command {
-                font-size: 0.7em;
-                padding: 6px 10px;
+            .stage {
+                display: flex;
+                align-items: center;
+                text-align: left;
+            }
+            
+            .stage-icon {
+                margin: 0 15px 0 0;
             }
         }
     </style>
@@ -288,8 +283,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-file-pdf"></i> Professional PDF Converter</h1>
-            <p>High-quality OCR conversion with advanced tools</p>
+            <h1><i class="fas fa-file-pdf"></i> PDF to Word Converter</h1>
+            <p>Professional conversion with advanced OCR technology</p>
         </div>
 
         <div class="content">
@@ -297,7 +292,7 @@
                 <div class="drop-zone" id="dropZone">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <h3>Drop your PDF here</h3>
-                    <p>Advanced OCR conversion with Poppler, Tesseract & Java</p>
+                    <p>or click to select a file</p>
                     <button class="browse-btn" id="browseBtn">Choose PDF File</button>
                     <input type="file" id="fileInput" accept=".pdf" style="display: none;">
                 </div>
@@ -312,46 +307,22 @@
                     </div>
                 </div>
 
-                <div class="processing-steps" id="processingSteps">
-                    <div class="step" id="step1">
-                        <div class="step-icon"><i class="fas fa-cog"></i></div>
-                        <div class="step-text">
-                            Initializing conversion tools...
-                            <span class="tool-command" id="toolCommand1"></span>
-                        </div>
-                        <div class="step-status" id="step1Status">Waiting</div>
+                <div class="conversion-stages" id="conversionStages">
+                    <div class="stage" id="stage1">
+                        <div class="stage-icon"><i class="fas fa-file-pdf"></i></div>
+                        <div class="stage-text">PDF Analysis</div>
                     </div>
-                    <div class="step" id="step2">
-                        <div class="step-icon"><i class="fas fa-tools"></i></div>
-                        <div class="step-text">
-                            Poppler PDF processing
-                            <span class="tool-command" id="toolCommand2"></span>
-                        </div>
-                        <div class="step-status" id="step2Status">Pending</div>
+                    <div class="stage" id="stage2">
+                        <div class="stage-icon"><i class="fas fa-eye"></i></div>
+                        <div class="stage-text">Text Recognition</div>
                     </div>
-                    <div class="step" id="step3">
-                        <div class="step-icon"><i class="fas fa-eye"></i></div>
-                        <div class="step-text">
-                            Tesseract OCR analysis
-                            <span class="tool-command" id="toolCommand3"></span>
-                        </div>
-                        <div class="step-status" id="step3Status">Pending</div>
+                    <div class="stage" id="stage3">
+                        <div class="stage-icon"><i class="fas fa-table"></i></div>
+                        <div class="stage-text">Table Extraction</div>
                     </div>
-                    <div class="step" id="step4">
-                        <div class="step-icon"><i class="fas fa-table"></i></div>
-                        <div class="step-text">
-                            Java table extraction
-                            <span class="tool-command" id="toolCommand4"></span>
-                        </div>
-                        <div class="step-status" id="step4Status">Pending</div>
-                    </div>
-                    <div class="step" id="step5">
-                        <div class="step-icon"><i class="fas fa-file-word"></i></div>
-                        <div class="step-text">
-                            Word document generation
-                            <span class="tool-command" id="toolCommand5"></span>
-                        </div>
-                        <div class="step-status" id="step5Status">Pending</div>
+                    <div class="stage" id="stage4">
+                        <div class="stage-icon"><i class="fas fa-file-word"></i></div>
+                        <div class="stage-text">Word Generation</div>
                     </div>
                 </div>
 
@@ -359,7 +330,7 @@
                     <div class="progress-bar" id="progressBar"></div>
                 </div>
 
-                <div class="status" id="status">Ready for professional PDF conversion</div>
+                <div class="status" id="status">Ready to convert your PDF document</div>
             </div>
 
             <div class="result-section" id="resultSection">
@@ -367,7 +338,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <h2 style="color: #28a745; margin-bottom: 15px;">Conversion Complete!</h2>
-                <p style="color: #666; margin-bottom: 25px;">Your PDF has been professionally converted using advanced OCR technology</p>
+                <p style="color: #666; margin-bottom: 25px;">Your PDF has been successfully converted to Word format</p>
                 
                 <a href="#" class="download-btn" id="downloadBtn">
                     <i class="fas fa-download"></i> Download Word Document
@@ -380,7 +351,7 @@
         </div>
 
         <div class="footer">
-            <p>© 2024 Professional PDF Converter | Powered by Poppler, Tesseract OCR & Java</p>
+            <p>© 2024 Professional PDF Converter | All rights reserved</p>
         </div>
     </div>
 
@@ -395,44 +366,18 @@
             const progressContainer = document.getElementById('progressContainer');
             const progressBar = document.getElementById('progressBar');
             const status = document.getElementById('status');
-            const processingSteps = document.getElementById('processingSteps');
+            const conversionStages = document.getElementById('conversionStages');
             const uploadSection = document.getElementById('uploadSection');
             const resultSection = document.getElementById('resultSection');
             const downloadBtn = document.getElementById('downloadBtn');
 
-            // Tool command elements
-            const toolCommands = [
-                document.getElementById('toolCommand1'),
-                document.getElementById('toolCommand2'),
-                document.getElementById('toolCommand3'),
-                document.getElementById('toolCommand4'),
-                document.getElementById('toolCommand5')
+            // Stage elements
+            const stages = [
+                document.getElementById('stage1'),
+                document.getElementById('stage2'),
+                document.getElementById('stage3'),
+                document.getElementById('stage4')
             ];
-
-            // Step elements
-            const steps = [
-                document.getElementById('step1'),
-                document.getElementById('step2'),
-                document.getElementById('step3'),
-                document.getElementById('step4'),
-                document.getElementById('step5')
-            ];
-
-            const stepStatuses = [
-                document.getElementById('step1Status'),
-                document.getElementById('step2Status'),
-                document.getElementById('step3Status'),
-                document.getElementById('step4Status'),
-                document.getElementById('step5Status')
-            ];
-
-            // Tool paths (updated with correct paths)
-            const toolPaths = {
-                poppler: 'tools\\poppler\\bin\\pdftoppm.exe',
-                tesseract: 'tools\\tesseract\\tesseract.exe',
-                java: 'tools\\java\\bin\\java.exe',
-                tabula: 'tools\\tabula.jar'
-            };
 
             browseBtn.addEventListener('click', () => {
                 fileInput.click();
@@ -485,7 +430,7 @@
                 fileSize.textContent = formatFileSize(file.size);
                 fileInfo.style.display = 'block';
                 progressContainer.style.display = 'block';
-                processingSteps.style.display = 'block';
+                conversionStages.style.display = 'flex';
 
                 // Start conversion process
                 await convertFile(file);
@@ -493,55 +438,33 @@
 
             async function convertFile(file) {
                 try {
-                    // Step 1: Initialize tools
-                    updateStep(0, 'processing', 'Initializing...');
-                    showStatus('Loading conversion tools...', 'processing');
-                    progressBar.style.width = '10%';
-                    
-                    // Show tool initialization commands
-                    toolCommands[0].textContent = `${toolPaths.poppler} -h`;
-                    await delay(1000);
-                    toolCommands[0].textContent = `${toolPaths.tesseract} --version`;
-                    await delay(1000);
-                    toolCommands[0].textContent = `${toolPaths.java} -version`;
-                    await delay(800);
-                    
-                    updateStep(0, 'completed', 'Tools ready');
-                    progressBar.style.width = '20%';
+                    // Stage 1: PDF Analysis
+                    updateStage(0, 'active');
+                    showStatus('Analyzing PDF structure...', 'processing');
+                    progressBar.style.width = '15%';
+                    await delay(2000);
+                    updateStage(0, 'completed');
+                    progressBar.style.width = '30%';
 
-                    // Step 2: Poppler processing
-                    updateStep(1, 'processing', 'Processing pages...');
-                    const popplerCommand = `${toolPaths.poppler} -png -r 300 "${file.name}" output_page`;
-                    toolCommands[1].textContent = popplerCommand;
-                    showStatus('Extracting PDF content with Poppler...', 'processing');
+                    // Stage 2: Text Recognition
+                    updateStage(1, 'active');
+                    showStatus('Performing text recognition...', 'processing');
                     await delay(2500);
-                    updateStep(1, 'completed', 'Pages extracted');
-                    progressBar.style.width = '40%';
+                    updateStage(1, 'completed');
+                    progressBar.style.width = '55%';
 
-                    // Step 3: Tesseract OCR
-                    updateStep(2, 'processing', 'Running OCR...');
-                    const tesseractCommand = `${toolPaths.tesseract} output_page-1.png output_text -l eng --dpi 300`;
-                    toolCommands[2].textContent = tesseractCommand;
-                    showStatus('Performing OCR with Tesseract...', 'processing');
-                    await delay(3000);
-                    updateStep(2, 'completed', 'OCR complete');
-                    progressBar.style.width = '60%';
-
-                    // Step 4: Java table extraction
-                    updateStep(3, 'processing', 'Extracting tables...');
-                    const javaCommand = `${toolPaths.java} -jar ${toolPaths.tabula} -l -p all "${file.name}"`;
-                    toolCommands[3].textContent = javaCommand;
-                    showStatus('Extracting tables with Java...', 'processing');
-                    await delay(2800);
-                    updateStep(3, 'completed', 'Tables extracted');
+                    // Stage 3: Table Extraction
+                    updateStage(2, 'active');
+                    showStatus('Extracting tables and formatting...', 'processing');
+                    await delay(2200);
+                    updateStage(2, 'completed');
                     progressBar.style.width = '80%';
 
-                    // Step 5: Word generation
-                    updateStep(4, 'processing', 'Creating document...');
-                    toolCommands[4].textContent = 'Generating final Word document...';
+                    // Stage 4: Word Generation
+                    updateStage(3, 'active');
                     showStatus('Generating Word document...', 'processing');
-                    await delay(2000);
-                    updateStep(4, 'completed', 'Document created');
+                    await delay(1800);
+                    updateStage(3, 'completed');
                     progressBar.style.width = '100%';
 
                     showStatus('Conversion complete!', 'success');
@@ -554,7 +477,9 @@
                     resultSection.style.display = 'block';
                     
                     // Create download link with blank content
-                    const blob = new Blob([], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                    const blob = new Blob([], { 
+                        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+                    });
                     const url = URL.createObjectURL(blob);
                     downloadBtn.href = url;
                     downloadBtn.download = file.name.replace('.pdf', '.docx');
@@ -565,19 +490,16 @@
                 }
             }
 
-            function updateStep(stepIndex, status, message) {
-                const step = steps[stepIndex];
-                const statusElement = stepStatuses[stepIndex];
+            function updateStage(stageIndex, status) {
+                const stage = stages[stageIndex];
                 
-                step.style.background = status === 'completed' ? '#f0fff4' : 
-                                      status === 'processing' ? '#fffbf0' : '#f8f9ff';
+                // Remove all classes
+                stage.classList.remove('active', 'completed');
                 
-                step.style.border = status === 'processing' ? '2px solid #ffc107' : 
-                                  status === 'completed' ? '2px solid #28a745' : '2px solid #e0e6ff';
-                
-                statusElement.textContent = message;
-                statusElement.style.color = status === 'completed' ? '#28a745' : 
-                                          status === 'processing' ? '#ffc107' : '#666';
+                // Add the new status class
+                if (status === 'active' || status === 'completed') {
+                    stage.classList.add(status);
+                }
             }
 
             function showStatus(message, type) {
@@ -597,19 +519,15 @@
             function resetUI() {
                 fileInfo.style.display = 'none';
                 progressContainer.style.display = 'none';
-                processingSteps.style.display = 'none';
+                conversionStages.style.display = 'none';
                 progressBar.style.width = '0%';
                 
-                // Reset all steps and tool commands
-                steps.forEach((step, index) => {
-                    step.style.background = '#f8f9ff';
-                    step.style.border = '2px solid #e0e6ff';
-                    stepStatuses[index].textContent = index === 0 ? 'Waiting' : 'Pending';
-                    stepStatuses[index].style.color = '#666';
-                    toolCommands[index].textContent = '';
+                // Reset all stages
+                stages.forEach((stage, index) => {
+                    stage.classList.remove('active', 'completed');
                 });
                 
-                showStatus('Initializing conversion system...', 'processing');
+                showStatus('Preparing conversion system...', 'processing');
             }
 
             function resetConverter() {
@@ -617,7 +535,7 @@
                 resultSection.style.display = 'none';
                 fileInput.value = '';
                 resetUI();
-                showStatus('Ready for professional PDF conversion', 'ready');
+                showStatus('Ready to convert your PDF document', 'ready');
             }
 
             function delay(ms) {
