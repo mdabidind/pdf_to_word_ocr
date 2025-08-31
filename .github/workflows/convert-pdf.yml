@@ -1,99 +1,53 @@
 name: Convert PDF to Word
 
 on:
-  push:
-    paths:
-      - 'inputs/**/*.pdf'  # Trigger when PDFs are added to inputs folder
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
+    inputs:
+      pdf_url:
+        description: 'URL of the PDF file to convert'
+        required: true
+        type: string
 
 jobs:
   convert:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Important for git operations later
-      
+    
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-        
+    
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y poppler-utils tesseract-ocr openjdk-17-jre libgl1 libglib2.0-0
-        
-    - name: Install Python dependencies
+    
+    - name: Install Python packages
       run: |
-        python -m pip install --upgrade pip
-        pip install flask pdf2docx pdf2image pytesseract python-docx pdfplumber tabula-py ocrmypdf
-        
-    - name: Create directory structure
+        pip install pdf2docx pdf2image pytesseract python-docx pdfplumber pillow
+    
+    - name: Download PDF
       run: |
-        mkdir -p inputs
-        mkdir -p outputs
-        mkdir -p scripts
-        
-    - name: Copy conversion script
+        wget -O input.pdf "${{ github.event.inputs.pdf_url }}"
+        echo "PDF downloaded successfully"
+    
+    - name: Convert PDF to Word
       run: |
-        # Create a simple conversion script
-        cat > scripts/convert.py << 'EOF'
-        import os
-        import sys
-        sys.path.append('/github/workspace/scripts')
-        
-        try:
-            from convert_all_in_one import convert_pdf_to_docx
-        except ImportError as e:
-            print(f"Import error: {e}")
-            sys.exit(1)
-            
-        def convert_all_pdfs():
-            input_dir = '/github/workspace/inputs'
-            output_dir = '/github/workspace/outputs'
-            
-            pdf_files = [f for f in os.listdir(input_dir) if f.lower().endswith('.pdf')]
-            
-            if not pdf_files:
-                print("No PDF files found in inputs directory")
-                return False
-                
-            for pdf_file in pdf_files:
-                input_path = os.path.join(input_dir, pdf_file)
-                output_file = os.path.splitext(pdf_file)[0] + '.docx'
-                output_path = os.path.join(output_dir, output_file)
-                
-                print(f"Converting {pdf_file} to {output_file}")
-                success = convert_pdf_to_docx(input_path, output_path)
-                
-                if success and os.path.exists(output_path):
-                    print(f"✓ Successfully converted {pdf_file}")
-                    # Remove the original PDF after successful conversion
-                    os.remove(input_path)
-                else:
-                    print(f"✗ Failed to convert {pdf_file}")
-                    return False
-                    
-            return True
-            
-        if __name__ == "__main__":
-            success = convert_all_pdfs()
-            sys.exit(0 if success else 1)
-        EOF
-        
-    - name: Run conversion
+        python convert.py input.pdf output.docx
+        echo "Conversion completed"
+    
+    - name: Upload Word document
+      uses: actions/upload-artifact@v4
+      with:
+        name: converted-word-document
+        path: output.docx
+    
+    - name: Create download link
       run: |
-        cd scripts
-        python convert.py
-        
-    - name: Commit and push results
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add outputs/
-        git add inputs/  # To track removed files
-        git commit -m "Auto-convert PDF(s) and add DOCX output" || echo "No changes to commit"
-        git push
+        echo "Conversion successful! Download your Word document from the Artifacts section."
