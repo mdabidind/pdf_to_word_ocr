@@ -1,53 +1,33 @@
-name: Convert PDF to Word
+name: PDF to Word Converter
 
 on:
-  workflow_dispatch:
-    inputs:
-      pdf_url:
-        description: 'URL of the PDF file to convert'
-        required: true
-        type: string
+  push:
+    paths:
+      - "input/**.pdf"
 
 jobs:
   convert:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y poppler-utils tesseract-ocr openjdk-17-jre libgl1 libglib2.0-0
-    
-    - name: Install Python packages
-      run: |
-        pip install pdf2docx pdf2image pytesseract python-docx pdfplumber pillow
-    
-    - name: Download PDF
-      run: |
-        wget -O input.pdf "${{ github.event.inputs.pdf_url }}"
-        echo "PDF downloaded successfully"
-    
-    - name: Convert PDF to Word
-      run: |
-        python convert.py input.pdf output.docx
-        echo "Conversion completed"
-    
-    - name: Upload Word document
-      uses: actions/upload-artifact@v4
-      with:
-        name: converted-word-document
-        path: output.docx
-    
-    - name: Create download link
-      run: |
-        echo "Conversion successful! Download your Word document from the Artifacts section."
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run conversion script
+        run: python convert.py
+
+      - name: Commit converted files
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add output/
+          git commit -m "Auto-converted PDFs to DOCX" || echo "No changes to commit"
+          git push
