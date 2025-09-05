@@ -1,78 +1,22 @@
-#!/usr/bin/env python3
-import sys
 import os
-from docx import Document
-import pdf2image
-import pytesseract
 from pdf2docx import Converter
-import pdfplumber
 
-def is_digital_pdf(pdf_path):
-    """Check if PDF has selectable text"""
-    try:
-        with pdfplumber.open(pdf_path) as pdf:
-            for i in range(min(3, len(pdf.pages))):
-                text = pdf.pages[i].extract_text()
-                if text and len(text.strip()) > 50:
-                    return True
-        return False
-    except:
-        return False
+INPUT_DIR = "input"
+OUTPUT_DIR = "output"
 
-def extract_text_with_ocr(pdf_path, output_docx):
-    """High-quality OCR extraction"""
-    try:
-        images = pdf2image.convert_from_path(pdf_path, dpi=300)
-        doc = Document()
-        
-        for i, image in enumerate(images):
-            text = pytesseract.image_to_string(image, lang='eng', config='--psm 6')
-            if text.strip():
-                doc.add_paragraph(text)
-            if i < len(images) - 1:
-                doc.add_page_break()
-        
-        doc.save(output_docx)
-        return True
-    except Exception as e:
-        print(f"OCR failed: {e}")
-        return False
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def convert_digital_pdf(pdf_path, output_docx):
-    """Convert digital PDF"""
-    try:
-        cv = Converter(pdf_path)
-        cv.convert(output_docx)
-        cv.close()
-        return True
-    except Exception as e:
-        print(f"Digital conversion failed: {e}")
-        return False
+for filename in os.listdir(INPUT_DIR):
+    if filename.lower().endswith(".pdf"):
+        pdf_path = os.path.join(INPUT_DIR, filename)
+        docx_name = os.path.splitext(filename)[0] + ".docx"
+        docx_path = os.path.join(OUTPUT_DIR, docx_name)
 
-def main():
-    if len(sys.argv) != 3:
-        print("Usage: python convert.py input.pdf output.docx")
-        return
-    
-    input_pdf = sys.argv[1]
-    output_docx = sys.argv[2]
-    
-    if not os.path.exists(input_pdf):
-        print("Input file not found")
-        return
-    
-    if is_digital_pdf(input_pdf):
-        print("Using digital text extraction...")
-        success = convert_digital_pdf(input_pdf, output_docx)
-    else:
-        print("Using OCR conversion...")
-        success = extract_text_with_ocr(input_pdf, output_docx)
-    
-    if success:
-        print(f"Success! Created: {output_docx}")
-    else:
-        print("Conversion failed")
-        sys.exit(1)
-
-if __name__ == "__main__":
-    main()
+        print(f"Converting {pdf_path} → {docx_path}")
+        try:
+            cv = Converter(pdf_path)
+            cv.convert(docx_path, start=0, end=None)
+            cv.close()
+            print(f"✅ Saved {docx_path}")
+        except Exception as e:
+            print(f"❌ Failed to convert {filename}: {e}")
