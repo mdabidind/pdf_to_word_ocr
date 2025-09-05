@@ -12,4 +12,11 @@ pytesseract==0.3.10
 python-docx==0.8.11
 pdfplumber==0.10.3
 pillow==10.0.1
+ocrmypdf==14.4.0
+Flask==2.3.3
+ocrmypdf==14.4.0
+Flask==2.3.3
+tabula-py==2.9.0
+PyPDF2==3.0.1
+pdf2docx==0.5.6
 
