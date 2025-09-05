@@ -3,7 +3,7 @@ name: PDF to Word Converter
 on:
   push:
     paths:
-      - "input/**.pdf"
+      - "input/**.pdf"   # Trigger only when new PDFs are pushed into input/
 
 jobs:
   convert:
@@ -22,12 +22,12 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run conversion script
-        run: python convert.py
-
-      - name: Commit converted files
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-          git add output/
-          git commit -m "Auto-converted PDFs to DOCX" || echo "No changes to commit"
-          git push
+          mkdir -p input output
+          python convert.py
+
+      - name: Upload converted DOCX files as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: converted-docx
+          path: output/*.docx
